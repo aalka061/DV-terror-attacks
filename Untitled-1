@@ -1,0 +1,9 @@
+ .on("postRender",function(c){
+            adjustBarChartLabels(c);c.svg().selectAll("rect.bar").on("click.scroll",function(d){
+                scrollTo(d.data.key);});
+           });
+          
+          
+          function adjustBarChartLabels(chart){
+              chart.svg().selectAll('.axis.x text').on("click",function(d){chart.filter(d);dc.redrawAll();scrollTo(d);})
+                  .style("text-anchor","end").attr("dx",function(d){return"-0.6em";}).attr("dy",function(d){return"-5px";});}          

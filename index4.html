@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vishulization of hit places</title>
+	<link rel="stylesheet" href="dc.css">
+    <link rel="stylesheet" href="./lib/css//bootstrap.min.css">
+    <link rel="stylesheet" href="./lib/css/keen-dashboards.css">
+    <link rel="stylesheet" href="./lib/nv.d3.css">
+
+
+
+
+
+</head>
+<body>
+        <h1>Visulization of hit places</h1>
+
+    <div class="row">
+    <div id="yearly-move-chart">
+        <strong>Yearly Line Chart </strong>
+            <span> <a class="reset" href="javascript:window.moveChart.filterAll();dc.redrawAll();"
+            style="display: none;">
+            reset
+          </a>
+        </span>
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+         <div class="   row">
+      <div id="year">
+             <strong>Year of Attack</strong>
+            <span class="reset" style="display: none;">Selected: <span class="filter"></span></span>
+            <a class="reset" href="javascript:yearChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+            <div class="clearfix"></div>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="country">
+            <strong>Targerted Country</strong>
+            <span class="reset" style="display: none;">Selected: <span class="filter"></span></span>
+            <a class="reset" href="javascript:countryChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+            <div class="clearfix"></div>
+        </div>
+
+
+        <div id="attackType">
+             <strong>Attack Type</strong>
+            <span class="reset" style="display: none;">Selected: <span class="filter"></span></span>
+            <a class="reset" href="javascript:attackTypeChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+            <div class="clearfix"></div>
+
+
+        </div>
+
+      <div id="country-pi-chart">
+        <strong>Top 5 Targeted Countries</strong>
+        <a class="reset" href="javascript:countryPieChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
+    </div>
+        </div>
+
+        <div class="row" >
+            <div>
+                <div class="dc-data-count">
+                    <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a
+                    href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+            </div>
+        </div>
+
+            <table class="table table-hover dc-data-table"></table>
+
+        </div>
+
+
+
+
+
+
+
+
+        <script src="crossfilter.js"></script>
+        <script src="d3.js"></script>
+        <script src="dc.js"></script>
+        <script src="./lib/js/jquery.min.js"></script>
+        <script src="./lib/js/bootstrap.min.js"></script>
+
+
+        <script>
+
+        var yearChart =dc.rowChart("#year");
+        var countryChart= dc.rowChart("#country");
+        var attackTypeChart= dc.rowChart("#attackType");
+        var visCount = dc.dataCount(".dc-data-count");
+        var visTable = dc.dataTable(".dc-data-table");
+         var moveChart = dc.lineChart('#yearly-move-chart');
+        var countryPieChart = dc.pieChart('#country-pi-chart');
+
+            d3.csv("hitPlacesDataset.csv", function(err, data){
+                if (err) throw err;
+
+                data.forEach(function (d) {
+                    var date = d.iyear+"-"+d.imonth+"-"+d.iday
+                    d.Timestamp = new Date (date);
+                //    d.Timestamp = d.Timestamp.getFullYear()+'/'+(d.Timestamp.getMonth()+1)+'/'+d.Timestamp.getDate();
+                });
+
+                var ndx = crossfilter(data);
+                var all = ndx.groupAll();
+
+                var iyearDim=ndx.dimension(function (d) {return d["iyear"] });
+                var countryDim=ndx.dimension(function (d) {return d["country_txt"] });
+                var attackTypeDim=ndx.dimension(function (d) {return d["attacktype1_txt"] });
+                var dateDim=ndx.dimension(function (d) {return d.Timestamp;});
+                var moveYears = ndx.dimension(function (d) {return d.iyear;});
+
+
+                var dateFormat = d3.time.format("%Y");
+                  data.forEach(function (d) {
+                  //  var date = d.iyear+"-"+d.imonth+"-"+d.iday
+                    d.time = dateFormat.parse(d.iyear);
+                //    d.Timestamp = d.Timestamp.getFullYear()+'/'+(d.Timestamp.getMonth()+1)+'/'+d.Timestamp.getDate();
+                });
+
+                var countByTime=ndx.dimension(function(d){
+                 return d.time;
+                })
+
+
+                var iyearDimGroup = iyearDim.group();
+                var countryDimGroup= countryDim.group();
+                var attackTypeDimGroup = attackTypeDim.group();
+                var dateDimGroup=dateDim.group();
+                var moveYearsGroup =moveYears.group();
+                var countByTimeGroup=countByTime.group().reduceCount();
+
+
+
+
+            yearChart
+                .dimension(iyearDim)
+                .group(iyearDimGroup)
+                .height(700)
+                .width(900)
+                .elasticX(true);
+            countryChart
+                .dimension(countryDim)
+                .group(countryDimGroup)
+                .elasticX(true)
+                .x(d3.scale.linear().domain([100,25000]))
+                .data(function (group){ return group.top(10)});
+
+            attackTypeChart
+                .dimension(attackTypeDim)
+                .group(attackTypeDimGroup)
+                .elasticX(true)
+                .data(function (group){ return group.top(10)});
+
+             visCount
+                .dimension(ndx)
+                .group(all);
+
+             visTable
+                .dimension(dateDim)
+               .group(function (d) {
+                    var format = d3.format('02d');
+                    return d.Timestamp.getFullYear();
+                })
+
+                .columns([
+                    "Timestamp",
+                    "country_txt",
+                    "attacktype1_txt"
+                ])
+                 .data(function (group){ return group.top(10)});
+             moveChart /* dc.lineChart('#monthly-move-chart', 'chartGroup') */
+                .renderArea(true)
+                .width(900)
+                .height(400)
+                 .margins({top: 30, right: 50, bottom: 25, left:70})
+                 .dimension(countByTime)
+                // .mouseZoomable(true)
+    // Specify a "range chart" to link its brush extent with the zoom of the current "focus chart".
+                // .rangeChart(volumeChart)////////////////////
+            //    .x(d3.scale.linear().domain([d3.min(data,function(d){return d["iyear"]}),d3.max(data,function(d){return d["iyear"]})]))
+                  .x(d3.time.scale().domain([d3.min(data,function(d){return d.time}),d3.max(data,function(d){return d.time})]))
+                        .round(d3.time.year.round)
+                        .xUnits(d3.time.years)
+
+
+                 .elasticY(true)
+                //  .elasticX(true)
+
+
+                 .renderHorizontalGridLines(true)
+    //##### Legend
+
+        // Position the legend relative to the chart origin and specify items' height and separation.
+              //   .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+                 .brushOn(false)
+        // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
+        // legend.
+        // The `.valueAccessor` will be used for the base layer
+                 .group(countByTimeGroup, 'Yearly Index Average')
+
+            countryPieChart
+                .width(180)
+                .height(180)
+                .radius(80)
+                .innerRadius(20)
+                .dimension(countryDim)
+                .group(countryDimGroup)
+                 //   .legend(dc.legend())
+
+                 .data(function (group){ return group.top(5)})
+                        //    .externalLabels(50)
+
+
+
+            dc.renderAll();
+
+            });
+
+        </script>
+</body>
+</html>
