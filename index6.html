@@ -68,7 +68,7 @@
                 <div class="form-group col-md-8">
                     <div>
                     <h1>Global Terrorism</h1>
-                    <p> Data Visulization of Terrorist Attacks since 1970 to 2016</p>
+                    <p> Data Visulization of Terrorist Attacks From 1970 to 2016</p>
                     </div>
                     <div >
                         <div id="search-input"  ></div>
@@ -106,7 +106,7 @@
                 <div class="col-md-12">
                  <div class="text-center graph_titles"><h2>Select Continent by clicking on the bar chart</h2></div>
 
-                    <div id="bar_continent" class="country"> </div>
+                    <div id="bar_continent"  class="country"> </div>
                 </div>
 
 
@@ -242,25 +242,8 @@
             var barContinentDimGroup = barContinentDim.group();
             var countryDimGroup= countryDim.group();
                 var attackTypeDimGroup = attackTypeDim.group();
-/*
-            $("#search-input").on('Search', function () {
-            text_filter(barContinentDim, barContinentDim.value);
-            });
 
-          function text_filter(dim,q){
-                barContinent.filterAll();
-                var re = new RegExp(q,"i")
-                if (q!=''){
-                    dim.filter(function(d){
-                        if (d.search(re)==0)
-                            return d;
-                    });
-                }
-              dc.redrawAll();
-              graphCustomizations();
-          };
-          */
-            var color = d3.scale.linear().clamp(true).domain([0, 50000,100000 ,150000, 180000]).range(["#CF1919", "#FA9B9B", "#ccc", "#d0e5cc", "#2C851C"]).interpolate(d3.interpolateHcl);
+
 
         barContinent
             .width(800)
@@ -270,40 +253,33 @@
             .brushOn(false)
             .yAxisLabel("Number of Hits")
             .dimension(barContinentDim)
-            .barPadding(0.2)
-
+            .renderHorizontalGridLines(true)
+            .renderVerticalGridLines(true)
+            .barPadding(0.4)
             .outerPadding(0.01)
             .colors(d3.scale.ordinal().domain(["low","med","high"])
                                 .range(["#ccc","#d0e5cc","#CF1919"]))
-             .colorAccessor(function(d) {
-            if(d.value <10000)
-                return "positive"
-            else if(d.value<25000)
-                return "med"
-            return "high";})
+            .colorAccessor(function(d) {
+                if(d.value <10000)
+                    return "positive"
+                else if(d.value<25000)
+                    return "med"
+                return "high";})
 
             .group(barContinentDimGroup)
-              .renderLabel(true)
-
-
-           .margins({top:3,right:0,bottom:140,left:60 })
-              .elasticY(true)
-          /*
-           .on("renderlet",function (chart) {
-                chart.selectAll("g.x text")
-                 .attr('transform', "rotate(-90)")
-
-            })
-            */
-             .label(function(d) { return (d.data.value / ndx.groupAll().reduceCount().value() * 100).toFixed(1) + "%"; })
-
-          .on("postRender",function(c){
-            adjustBarChartLabels(c);
-            c.svg()
+            .label(function(d) { return (d.data.value / ndx.groupAll().reduceCount().value() * 100).toFixed(1) + "%"; })
+            .renderLabel(true)
+            .elasticY(true)
+            .yAxisPadding('10%')
+            .y(d3.scale.linear().domain([0,55000]))
+            .margins({top:5,right:0,bottom:140,left:60 })
+            .on("postRender",function(c){
+                adjustBarChartLabels(c);
+                c.svg()
                 .selectAll("rect.bar")
                 .on("click.scroll",function(d){
                     scrollTo(d.data.key);});
-           });
+            });
 
 
        yearlyHitsChart
