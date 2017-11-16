@@ -9,8 +9,12 @@ requirements :
   - Import data using the following command in the directory in which  the data is extracted
       ```
       $ mongoimport -d terrorDatadb -c projects --type csv --file hitPlacesDataset.csv --headerline
-      ```
-      
+      `
   - run app.py
+ ## Authors
+ * **Abdullah Al-Kaf**
+ * **Deivaram Venkatachalapathy**
+
+ 
 
 
